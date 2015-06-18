@@ -1,0 +1,60 @@
+DATA MODEL
+----------
+data : [{
+	_id:
+	date:
+	activityList: {
+		task: [ {
+		    id: 
+			description: 
+			status: 
+			comment: 
+		} ],
+		commit:[{
+		    id:
+			revisionNumber:
+			file(s):
+			comment:
+		}]
+	}
+}]
+
+REST API
+--------
+
+PUT     ( CREATE )
+# /:date
+  - reate activity ( task / commit ) for given date  based on REQUEST params;
+    return the entire activity list for the given date;
+
+GET     ( READ )
+# "/"
+  - send index.html
+
+# /list/:from/:to
+  - get all activities ( task / commit ) for given date range
+
+# /list/:from/:to/:type
+  - get specific activity ( task / commit ) for given date range
+
+# /:date
+  - get all activities ( task / commit ) for given date
+
+# /:date/:type
+  -  get all records within a specific activity ( task / commit ) for given date
+
+# /:date/:type/:id
+  - get a specific record within a specific activity ( task / commit ) for given date
+
+POST    ( UPDATE )
+# /:date
+  - update activity ( task / commit ) for given date  based on REQUEST params;
+    return the entire activity list for the given date;
+
+DELETE  ( DELETE )
+# /:date
+  - delete activity ( task / commit ) for given date based on REQUEST params;
+
+HANDLE INVALID REQUEST
+# *
+  - invalid other requests

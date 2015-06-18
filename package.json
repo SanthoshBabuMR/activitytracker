@@ -1,0 +1,19 @@
+{
+  "name": "activitytracker",
+  "version": "0.0.1",
+  "description": "web app for tracking work",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "body-parser": "^1.12.4",
+    "express": "^4.12.4",
+    "final-fs": "^1.6.1",
+    "fs-extra": "^0.18.4",
+    "jsonfile": "^2.0.1",
+    "underscore": "^1.8.3"
+  }
+}
