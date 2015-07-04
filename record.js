@@ -8,6 +8,7 @@ exports.write = function(dbData, jsonData){
 		record;
 	if(!_.isEmpty(jsonActivityList)) {
 		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
+			dbData.date = jsonData.date;
 			if( typeof jsonActivityList[dbActivityName] !== "undefined" ){
 				_.each(jsonActivityList[dbActivityName], function( jsonActivity, index ){
 					record = schema.get(dbActivityName);
@@ -33,14 +34,40 @@ exports.update = function(dbData, jsonData){
 		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
 			if( typeof jsonActivityList[dbActivityName] !== "undefined" ){
 				_.each(jsonActivityList[dbActivityName], function( jsonActivity, index ){
-					record = schema.get(dbActivityName);
-					record.id = helper.guid();
-					helper.eachObject( record, function( key, value ) {
-						if(key !== "id" && typeof jsonActivity[key] !== "undefined") {
-							record[key] = jsonActivity[key];
+					if(!_.isObject(jsonActivity)) {
+					// handle delete request via POST since angular doesn't allow to send data with DELETE HTTP
+						var id = jsonActivity;
+						if( id === true ) {
+							dbActivityList[dbActivityName] = [];
 						}
-					});
-					dbActivity.push(record);	
+						else {
+							records = _.reject(dbActivityList[dbActivityName], function(activity){
+								return activity.id === id;
+							});
+							dbActivityList[dbActivityName] = records;
+						}
+					}
+					else if(jsonActivity.id) {
+						record = _.find(dbActivity, function(activity){ 
+							return activity.id === jsonActivity.id; 
+						});
+						for(var key in record) {
+							if(key !== "id") {
+								record[key] = jsonActivity[key];
+							}
+							
+						}	
+					}
+					else {
+						record = schema.get(dbActivityName);
+						record.id = helper.guid();
+						helper.eachObject( record, function( key, value ) {
+							if(key !== "id" && typeof jsonActivity[key] !== "undefined") {
+								record[key] = jsonActivity[key];
+							}
+						});
+						dbActivity.push(record);
+					}					
 				})				
 			}
 		});	
@@ -86,6 +113,7 @@ exports.remove = function(dbData, jsonData){
 	var dbActivityList     = dbData.activityList,
 		jsonActivityList   = jsonData && jsonData.activityList || {},
 		records;
+		console.log(jsonActivityList)
 	if(!_.isEmpty(jsonActivityList)) {
 		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
 			if( typeof jsonActivityList[dbActivityName] !== "undefined" ){

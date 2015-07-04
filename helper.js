@@ -16,7 +16,7 @@ exports.getFilePathFromDate = function(d){
 		return {
 			"y" : d.getFullYear(),
 			"m" : constants.MONTH[ d.getMonth() ],
-			"d" : d.getDate()
+			"d" : d.getDate()<10? "0"+d.getDate() : ""+d.getDate()
 		}
 	}
 	else if( _.isString(d) ) {
@@ -51,30 +51,33 @@ exports.getNextDay = function(d){
 	return nxtDay;
 };
 
+exports.getPrevDay = function(d){
+	var prevDay = new Date(d);
+	prevDay.setDate(d.getDate()-1); 
+	return prevDay;
+};
+
 exports.getDateRange = function(from, to) {
 	var dateRange = [],
 		temp,
-		nxtDay;
+		day,
+		getDayFn;
 	if(from.getDate() === to.getDate() && from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear() ) {
 		return from;
 	}
-	else if(from>to){
-		temp = from;
-		from = to;
-		to = temp;
-	}
+	getDayFn = from>to? exports.getPrevDay : exports.getNextDay;
 	var i = 0;
-	while(true){
+	do{
 		if(!dateRange.length){
-			nxtDay = from;
+			day = from;
 		} else {
-			nxtDay = exports.getNextDay( dateRange[dateRange.length-1] );
+			day = getDayFn( dateRange[dateRange.length-1] );
 		}
-		if(nxtDay.getDate() === to.getDate() && nxtDay.getMonth() === to.getMonth() && nxtDay.getFullYear() === to.getFullYear() ) {
+		dateRange.push(day);
+		if(day.getDate() === to.getDate() && day.getMonth() === to.getMonth() && day.getFullYear() === to.getFullYear() ) {
 			break;
-		}
-		dateRange.push(nxtDay);
-	}
+		}		
+	}while(true);	
 	return dateRange;
 };
 

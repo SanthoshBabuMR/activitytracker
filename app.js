@@ -15,6 +15,11 @@ router.get("/", function(req, res) {
     res.send("welcome to activity tracker!");
 });
 
+//favicon
+router.get("/favicon.ico", function(req,res) {
+    res.send("no favicon set")
+});
+
 //CREATE
 router.put("/:date", function(req, res) {
     // create activity ( task / commit ) for given date  based on REQUEST params;

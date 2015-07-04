@@ -10,7 +10,7 @@ exports.get = function(type){
 	var commitSchema  = {
         "id": "",
         "revision": "",
-        "file": [],
+        "files": [],
         "comment": ""
     };
     var fileSchema =  {
@@ -55,9 +55,9 @@ exports.normalizeData = function( schema, data ){
 }
 
 exports.skeleton = function(){
-	var d = new Date();
+	//var d = new Date();
 	return {
-		date: d,
+		date: '',
 		activityList:{
 			task: [],
 			commit: []

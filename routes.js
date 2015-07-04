@@ -40,7 +40,8 @@ exports.getActivity= function( req, res ) {
 		var jsonOutput = [],
 			fromDate,
 			toDate,
-			dateRange;
+			dateRange,
+			count=-1;
 		if( reqParams.from && reqParams.to ){
 			fromDate = helper.getDateObject(reqParams.from);
 			toDate = helper.getDateObject(reqParams.to);
@@ -50,16 +51,18 @@ exports.getActivity= function( req, res ) {
 				if(fpath === false) {
 					console.log("ERROR-> routes.js > exports.getActivity");
 					return helper.sendError(res, constants.INVALID_DATE);
-				}		
+				}
 				fileHandler.readRecord(fpath, req, function(err, data){
+					count++;
 					if(err){
 						console.log("ERROR-> routes.js > exports.getActivity > readRecord");
 						return helper.sendError(res, constants.ERROR_READ);
 					}
 					if(data) {
 						jsonOutput.push(data);
-					}					
-					if(dateRange.length-1 === index ) {
+					}
+					//console.log('dateRange('+(dateRange.length-1)+')' + '--' +'count('+count+')');
+					if(dateRange.length-1 === count ) {
 						return helper.sendData( res, jsonOutput );
 					}
 				});
