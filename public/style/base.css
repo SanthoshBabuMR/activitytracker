@@ -47,9 +47,12 @@ table {
 	border-spacing: 0;
 }
 
-
+/**
+ * begin: custom styles
+ **/
 body {
 	padding: 10px 5px;
+	font-family: arial;
 }
 .hide-from-screen {
 	position: absolute;
@@ -65,3 +68,97 @@ body {
 	border: none;
 	border-bottom: 1px solid gray;
 }
+
+.page-header{
+	/*background: #FF6138;
+	color: #FFFFFF;*/
+	font-size: 21px;
+	line-height: 1.5;
+	padding: 0 0 0 5px;
+	margin: 0 0 5px 0;
+}
+.add-data,
+.view-data {
+	border: 1px solid #EEEEEE;
+	margin: 5px;
+	padding: 5px;
+	display: block;
+}
+.add-data .group{
+	padding: 5px;
+}
+.add-data fieldset,
+.view-data fieldset {
+	border-bottom: 1px solid #CCCCCC;
+	padding: 3px 0;
+	margin: 3px 0;
+}
+.row {
+	padding: 2px 0;
+	width: 960px;
+}
+.lbl {
+	display: inline-block;
+	box-sizing: border-box;
+	padding: 0 2px;
+}
+.action {
+	display: inline-block;
+	width: 2%;
+	cursor: pointer;
+}
+.lbl.status,
+.lbl.revision{
+	width: 12%;
+}
+.lbl.description,
+.lbl.files{
+	width: 58%;
+}
+.lbl.comment {
+	width: 26%;
+}
+.lbl input,
+.lbl select,
+.lbl textarea {
+	width: 100%;
+}
+.title-task{
+	font-weight: bold;
+	font-size: 12px;
+}
+.title-commit{
+	font-weight: bold;
+	font-size: 12px;
+}
+.group-task 
+.group-task .row {
+	background: #B69A8C;
+	border-bottom:1px solid #000000; 
+}
+.action,
+.lbl.status select,
+.lbl.revision input{
+	position: relative;
+	top: -20px;
+}
+
+.view-data .group {
+	/*border: 1px solid #CCCCCC;*/
+	margin: 10px 0;
+	padding: 5px;
+	box-shadow: 0px 1px 1px #000, 1px 0px 1px #CCC;
+}
+.view-data .title {
+	border-bottom: 1px solid #EFEFEF;
+	padding: 3px 0;
+}
+
+.view-data .sub-title {
+	padding: 10px 0 0 0;
+	margin: 0 0 10px 0;ow
+}
+
+/**
+ * end: custom styles
+ **/
