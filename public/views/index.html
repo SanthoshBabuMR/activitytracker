@@ -15,168 +15,127 @@
 			<header class="page-header">
 				<h1 class="title">Activity Tracker</h1>
 			</header>
-			<hr>
 			<section class="page-content">
 				<section class="add-data">
 					<div ng-controller="newActivity as activity">
-						<input type="button" value="add activity" ng-click="activity.toggleDisplay()" ng-show="!activity.add"/>
-						<input type="button" value="close activity" ng-click="activity.toggleDisplay()" ng-show="activity.add"/>
+						<input type="button" value="Add Activity" ng-click="activity.toggleDisplay()" ng-show="!activity.add"/>
+						<input type="button" value="Close" ng-click="activity.toggleDisplay()" ng-show="activity.add"/>
 						<form ng-submit="activity.save()" ng-show="activity.add">
-							<span>Adding activity for : </span>
-							<select ng-options="date for date in activity.dateList" ng-model="activity.date">
-								<option value="">Date</option>
-							</select>
-							<select ng-options="month for month in activity.monthList" ng-model="activity.month">
-								<option value="">Month</option>
-							</select>
-							<select ng-options="year for year in activity.yearList" ng-model="activity.year">
-								<option value="">Year</option>
-							</select>
-							<fieldset>
-								<legend><span ng-click="activity.addTask()">[+]</span>Task Details</legend>
-								<div ng-repeat="task in activity.taskList">
-									<span ng-click="activity.removeTask($index)">[x]</span>
-									<label>
+							<div class="group">
+								<span>Adding activity for : </span>
+								<select ng-options="date for date in activity.dateList" ng-model="activity.date">
+									<option value="">Date</option>
+								</select>
+								<select ng-options="month for month in activity.monthList" ng-model="activity.month">
+									<option value="">Month</option>
+								</select>
+								<select ng-options="year for year in activity.yearList" ng-model="activity.year">
+									<option value="">Year</option>
+								</select>
+							</div>							
+							<fieldset class="group-task">
+								<legend class="title-task"><span ng-click="activity.addTask()" tabindex="0">[+]Task Details</span></legend>
+								<div ng-repeat="task in activity.taskList" class="row">
+									<span ng-click="activity.removeTask($index)" tabindex="0" class="action" title="remove task">[x]</span>
+									<label class="lbl status">
+										<span class="hide-from-screen">Status</span>
+										<select ng-options="status for status in activity.statusList" ng-model="task.status">
+											<option value="">Status</option>
+										</select>
+
+									</label>
+									<label class="lbl description">
 										<span class="hide-from-screen">Description</span>
 										<textarea ng-model="task.description" placeholder="add description"></textarea>
-									</label>
-									<label>
-										<span class="hide-from-screen">Status</span>
-										<input type="text" ng-model="task.status" placeholder="status(Y/P/C)">
-									</label>
-									<label>
+									</label>									
+									<label class="lbl comment">
 										<span class="hide-from-screen">Comment</span>
 										<textarea ng-model="task.comment" placeholder="comment"></textarea>
 									</label>
 								</div>
 							</fieldset>
-							<fieldset>
-								<legend><span ng-click="activity.addCommit()">[+]</span>Commit Details</legend>
-								<div ng-repeat="commit in activity.commitList">
-									<span ng-click="activity.removeCommit($index)">[x]</span>
-									<label>
+							<fieldset class="group-commit">
+								<legend class="title-commit"><span ng-click="activity.addCommit()" tabindex="0">[+]Commit Details</span></legend>
+								<div ng-repeat="commit in activity.commitList" class="row">
+									<span ng-click="activity.removeCommit($index)" tabindex="0" class="action" title="remove commit">[x]</span>
+									<label class="lbl revision">
 										<span class="hide-from-screen">Revision Number</span>
 										<input type="text" ng-model="commit.revision" placeholder="revision number">
 									</label>
-									<label>
+									<label class="lbl files">
 										<span class="hide-from-screen">Files</span>
 										<textarea ng-model="commit.files" placeholder="file(s) added/updated/deleted"></textarea>
 									</label>
-									<label>
+									<label class="lbl comment">
 										<span class="hide-from-screen">Comment</span>
 										<textarea ng-model="commit.comment" placeholder="comment"></textarea>
 									</label>
 								</div>								
 							</fieldset>
-							<input type="submit" value="save" />
+							<input type="submit" value="Save" />
 						</form>
 					</div>
 				</section>
-				<hr>
+
 				<section class="view-data">
-					<h1>
-						View Activity
+					<h1 class="title">
+						Previous Activity List
 					</h1>
 					<div ng-controller="viewActivities as activity">
 						<div ng-repeat="(listIndex, list) in activity.list">
-							<section>
+							<section class="group">
 								<header>
-									<h2>Activity for {{list.date}}</h2>
+									<h2 class="sub-title">Activity for {{list.date}}</h2>
 								</header>
 								<article>
 									<form ng-submit="activity.update($index)">
-										<legend><span ng-click="activity.addTask(listIndex, $index)">[+]</span>Task Details</legend>
-										<div ng-repeat="task in list.activityList.task">
-											<span ng-click="activity.removeTask(listIndex, $index)">[x]</span>
-											<label>
-												<span class="hide-from-screen">Description</span>
-												<textarea ng-model="task.description" placeholder="add description"></textarea>
-											</label>
-											<label>
-												<span class="hide-from-screen">Status</span>
-												<input type="text" ng-model="task.status" placeholder="status(Y/P/C)">
-											</label>
-											<label>
-												<span class="hide-from-screen">Comment</span>
-												<textarea ng-model="task.comment" placeholder="comment"></textarea>
-											</label>
-										</div>
-										<legend><span ng-click="activity.addCommit(listIndex, $index)">[+]</span>Commit Details</legend>
-										<div ng-repeat="commit in list.activityList.commit">
-											<span ng-click="activity.removeCommit(listIndex, $index)">[x]</span>
-											<label>
-												<span class="hide-from-screen">Revision</span>
-												<input type="text" ng-model="commit.revision" placeholder="revision number">
-											</label>
-											<label>
-												<span class="hide-from-screen">Files</span>
-												<textarea ng-model="commit.files" placeholder="file(s) added/updated/deleted"></textarea>
-											</label>
-											<label>
-												<span class="hide-from-screen">Comment</span>
-												<textarea ng-model="commit.comment" placeholder="comment"></textarea>
-											</label>
-										</div>	
+										<fieldset class="group-task">
+											<legend class="title-task"><span ng-click="activity.addTask(listIndex, $index)">[+]Task Details</span></legend>
+											<div ng-repeat="task in list.activityList.task" class="row">
+												<span ng-click="activity.removeTask(listIndex, $index)" class="action" title="remove task">[x]</span>
+												<label class="lbl status">
+													<span class="hide-from-screen">Status</span>
+													<select ng-options="status for status in activity.statusList" ng-model="task.status">
+														<option value="">Status</option>
+													</select>
+												</label>
+												<label class="lbl description">
+													<span class="hide-from-screen">Description</span>
+													<textarea ng-model="task.description" placeholder="add description"></textarea>
+												</label>
+												<label class="lbl comment">
+													<span class="hide-from-screen">Comment</span>
+													<textarea ng-model="task.comment" placeholder="comment"></textarea>
+												</label>
+											</div>
+										</fieldset>
+										<fieldset class="group-commit">
+											<legend class="title-commit"><span ng-click="activity.addCommit(listIndex, $index)">[+]Commit Details</span></legend>
+											<div ng-repeat="commit in list.activityList.commit" class="row">
+												<span ng-click="activity.removeCommit(listIndex, $index)" class="action" title="remove commit">[x]</span>
+												<label class="lbl revision">
+													<span class="hide-from-screen">Revision</span>
+													<input type="text" ng-model="commit.revision" placeholder="revision number">
+												</label>
+												<label class="lbl files">
+													<span class="hide-from-screen">Files</span>
+													<textarea ng-model="commit.files" placeholder="file(s) added/updated/deleted"></textarea>
+												</label>
+												<label class="lbl comment">
+													<span class="hide-from-screen">Comment</span>
+													<textarea ng-model="commit.comment" placeholder="comment"></textarea>
+												</label>
+											</div>	
+										</fieldset>
 										<input type="submit" value="update activity" />
 									</form>
 								</article>
 							</section>							
-							<hr /><hr />
 						</div>
-						<span ng-click="activity.loadMore()">Load Data for Next Month</span>
+						<button ng-click="activity.loadMore()">Load Data for Next Month</button>
 
 
 
-
-						<form ng-submit="activity.save()" ng-show="activity.add">
-							<span>Adding activity for : </span>
-							<select ng-options="date for date in activity.dateList" ng-model="activity.date">
-								<option value="">Date</option>
-							</select>
-							<select ng-options="month for month in activity.monthList" ng-model="activity.month">
-								<option value="">Month</option>
-							</select>
-							<select ng-options="year for year in activity.yearList" ng-model="activity.year">
-								<option value="">Year</option>
-							</select>
-							<fieldset>
-								<legend><span ng-click="activity.addTask()">[+]</span>Task Details</legend>
-								<div ng-repeat="task in activity.taskList">
-									<span ng-click="activity.removeTask($index)">[x]</span>
-									<label>
-										<span class="hide-from-screen">Description</span>
-										<textarea ng-model="task.description" placeholder="add description"></textarea>
-									</label>
-									<label>
-										<span class="hide-from-screen">Status</span>
-										<input type="text" ng-model="task.status" placeholder="status(Y/P/C)">
-									</label>
-									<label>
-										<span class="hide-from-screen">Comment</span>
-										<textarea ng-model="task.comment" placeholder="comment"></textarea>
-									</label>
-								</div>
-							</fieldset>
-							<fieldset>
-								<legend><span ng-click="activity.addCommit()">[+]</span>Commit Details</legend>
-								<div ng-repeat="commit in activity.commitList">
-									<span ng-click="activity.removeCommit($index)">[x]</span>
-									<label>
-										<span class="hide-from-screen">Revision Number</span>
-										<input type="text" ng-model="commit.revisionNumber" placeholder="revision number">
-									</label>
-									<label>
-										<span class="hide-from-screen">Files</span>
-										<textarea ng-model="commit.files" placeholder="file(s) added/updated/deleted"></textarea>
-									</label>
-									<label>
-										<span class="hide-from-screen">Comment</span>
-										<textarea ng-model="commit.comment" placeholder="comment"></textarea>
-									</label>
-								</div>								
-							</fieldset>
-							<input type="submit" value="save" />
-						</form>
 					</div>
 				</section>
 			</section>	
