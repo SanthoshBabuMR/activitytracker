@@ -54,6 +54,12 @@ body {
 	padding: 10px 5px;
 	font-family: arial;
 }
+.hint{
+	color: #666666;
+	font-size: 13px;
+	text-indent:  15px;
+	display: inline-block;
+}
 .hide-from-screen {
 	position: absolute;
 	width: 0px;
@@ -63,10 +69,13 @@ body {
 	left: -999em;
 }
 
+.view-data select {
+	border: none;
+}
 .view-data input[type="text"],
 .view-data textarea {
 	border: none;
-	border-bottom: 1px solid gray;
+	/*border-bottom: 1px solid #ECE7E7;*/
 }
 
 .page-header{
@@ -89,13 +98,15 @@ body {
 }
 .add-data fieldset,
 .view-data fieldset {
-	border-bottom: 1px solid #CCCCCC;
+	/*border-bottom: 1px solid #CCCCCC;*/
 	padding: 3px 0;
 	margin: 3px 0;
 }
 .row {
-	padding: 2px 0;
+	padding: 5px 0;
 	width: 960px;
+	border-bottom: 1px solid #efefef;
+	
 }
 .lbl {
 	display: inline-block;
@@ -114,20 +125,20 @@ body {
 .lbl.description,
 .lbl.files{
 	width: 58%;
+	border-left: 1px solid #EFEFEF;
 }
 .lbl.comment {
 	width: 26%;
+	border-left: 1px solid #EFEFEF;
 }
 .lbl input,
 .lbl select,
 .lbl textarea {
 	width: 100%;
 }
-.title-task{
-	font-weight: bold;
-	font-size: 12px;
-}
+.title-task,
 .title-commit{
+	cursor: pointer;
 	font-weight: bold;
 	font-size: 12px;
 }
@@ -156,9 +167,36 @@ body {
 
 .view-data .sub-title {
 	padding: 10px 0 0 0;
-	margin: 0 0 10px 0;ow
+	margin: 0 0 10px 0;
 }
-
+.view-data header select {
+	display:  inline-block;
+	color: #4468D8;
+	-webkit-appearance: none;
+    -moz-appearance: none;
+    text-indent: 1px;
+    text-overflow: '';
+    text-transform: capitalize;
+    font-weight: bold;
+}
+.view-data header select::-ms-expand {
+    display: none;
+}
+.add-data .status-message,
+.view-data .status-message {
+	position: fixed;
+	top: 0;
+	left: 45%;
+	display: inline-block;
+	padding: 5px;
+	font-size: 13px;
+	background: #EADE8B;
+}
+.remove-confirm {
+	border: 1px solid #ff0000;
+	padding: 5px 5px 5px 15px;
+	margin: 0 0 5px 0;
+}
 /**
  * end: custom styles
  **/
