@@ -13,6 +13,15 @@ helper.getMonthIndex = function(val) {
     }
   }
 }
+helper.grepDate = function(d) {
+  return d && d.split("-") && window.parseInt(d.split("-")[0],10) || null;
+}
+helper.grepMonth = function(d) {
+  return d && d.split("-") && d.split("-")[1] || null;
+}
+helper.grepYear = function(d) {
+  return d && d.split("-") && window.parseInt(d.split("-")[2],10) || null;
+}
 helper.getDaysInAMonth = function(month, year) {
   var days;
   switch(month) {
@@ -50,6 +59,9 @@ static.yearList = function(options) {
   }
   return y;
 }
+static.statusList = function(){
+  return ["Yet To Begin", "Pending", "Complete", "Clarification Required"];  
+}
 
 var core = {};
 core.getTaskModel = function() {
@@ -73,8 +85,8 @@ var app = angular.module('activityTracker', []);
 function addActivity($http, activity, callback){
   var d      = new Date();
     routeURL = "http://localhost:6060/",
-    forDate  = helper.padZero(activity.date) + "-" + activity.month + "-" + activity.year,
-    routeURL += forDate.replace(/-/g,"");
+    forDate  = helper.padZero(activity.date) + "-" + activity.month + "-" + activity.year;
+  routeURL += forDate.replace(/-/g,"");
   var data = {
     date: forDate,
     activityList: {
@@ -93,10 +105,10 @@ function addActivity($http, activity, callback){
     });
 }
 
-function updateActivity($http, activity){
+function updateActivity($http, activity, callback){
   var d      = new Date();
-    routeURL = "http://localhost:6060/",
-    routeURL += activity.date.replace(/-/g,"");
+    routeURL = "http://localhost:6060/";
+  routeURL += activity.date.replace(/-/g,"");
   var data = {
     date: activity.date,
     activityList: {
@@ -104,15 +116,13 @@ function updateActivity($http, activity){
       commit: activity.activityList.commit
     }
   }
-  console.log(activity)
-  console.log(data)
   //console.log(routeURL)
   $http
     .post(routeURL, data)
     .success(function(res, status, headers, config) {
-      console.log(res);
+      callback(null, res);
     }).error(function(res, status, headers, config) {
-      console.error(res)
+      callback(true, res);
     });
 }
 
@@ -148,6 +158,7 @@ app.controller('newActivity', function($scope, $http) {
     newActivity.dateList = static.dateList();    
     newActivity.monthList = static.monthList();
     newActivity.yearList = static.yearList();
+    newActivity.statusList = static.statusList();
     newActivity.date = '';
     newActivity.month = '';
     newActivity.year = '';
@@ -162,22 +173,60 @@ app.controller('newActivity', function($scope, $http) {
       newActivity.commitList = [];
     }    
     newActivity.addTask = function() {
-      newActivity.taskList.push( core.getTaskModel() );
+      newActivity.taskList.unshift( core.getTaskModel() );
     }
     newActivity.addCommit = function() {
-      newActivity.commitList.push( core.getCommitModel() );
+      newActivity.commitList.unshift( core.getCommitModel() );
+    }
+     newActivity.cancelRemoveTask = function(index){
+      newActivity.taskList[index].removeConfirm = false;
+    }
+    newActivity.confirmRemoveTask = function(index) {
+      var task = newActivity.taskList[index];
+      if(!task.status && !task.description && !task.comment) {
+        newActivity.removeTask(index);
+      }
+      else {
+        task.removeConfirm = true;  
+      }      
     }
     newActivity.removeTask = function(index) {
       newActivity.taskList.splice(index, 1);
+    }
+    newActivity.cancelRemoveCommit = function(index){
+      newActivity.commitList[index].removeConfirm = false;
+    }
+    newActivity.confirmRemoveCommit = function(index) {
+      var commit = newActivity.commitList[index];
+      if(!commit.revisionNumber && !commit.files && !commit.comment) {
+        newActivity.removeCommit(index);
+      }
+      else {
+        commit.removeConfirm = true;  
+      }  
     }
     newActivity.removeCommit = function(index) {
       newActivity.commitList.splice(index, 1);
     }   
     newActivity.save = function() {
-      addActivity($http, newActivity, function() {
-        newActivity.toggleDisplay();
+      addActivity($http, newActivity, function(err, res) {
+        if(!err) {
+          newActivity.toggleDisplay();
+          newActivity.setStatusMessage("added activity for " + res.data.date);  
+        }        
       });
     }
+    newActivity.configureStatusMessage = (function(scope) {
+      scope.statusMessage = "";
+      newActivity.setStatusMessage = function(msg) {
+        scope.statusMessage = msg;
+        setTimeout(newActivity.clearStatusMessage, 2000);
+      }
+      newActivity.clearStatusMessage = function(){
+        scope.statusMessage = "";
+      }
+    })($scope);
+    
 });
 
 
@@ -189,6 +238,15 @@ app.controller('viewActivities', function($scope, $http) {
     var currentMonth =  helper.getMonthByIndex(currentMonthIndex);
     var currentYear = today.getFullYear();
     var nextMonth;
+    viewActivities.dateList = static.dateList();    
+    viewActivities.monthList = static.monthList();
+    viewActivities.yearList = static.yearList();
+    viewActivities.statusList = static.statusList();
+    viewActivities.noTask = 'No task(s) added for the day.';
+    viewActivities.noCommit = 'No commit(s) added for the day.'
+    viewActivities.hasTask = true;
+    viewActivities.hasCommit = true;
+ 
     viewActivities.getDataByMonth = function(m,y) {
       var from     = helper.getDaysInAMonth(m,y)+m+y,
           to       = "01"+m+y,
@@ -197,9 +255,15 @@ app.controller('viewActivities', function($scope, $http) {
 
       getActivityList( $http, routeURL, function(err, res ){
         if(!err) {
-          var listData = res.data;
+          var listData = res.data,
+              indList;
           for(var i=0;i<listData.length;i++) {
-            viewActivities.list.push( listData[i] )
+
+            indList = listData[i];
+            indList.dateVal = helper.grepDate(indList.date);
+            indList.monthVal = helper.grepMonth(indList.date);
+            indList.yearVal = helper.grepYear(indList.date);
+            viewActivities.list.push( indList );
           }
         }
         else {
@@ -226,12 +290,18 @@ app.controller('viewActivities', function($scope, $http) {
 
     viewActivities.addTask = function(listIndex, taskIndex) {
       var taskList = viewActivities.list[listIndex].activityList.task;
-      taskList.push( core.getTaskModel() );
+      taskList.unshift( core.getTaskModel() );
     }
     viewActivities.addCommit = function(listIndex, commitIndex) {
       var commitList = viewActivities.list[listIndex].activityList.commit;
-      commitList.push( core.getCommitModel() );
+      commitList.unshift( core.getCommitModel() );
     }
+    viewActivities.confirmRemoveTask = function(listIndex, taskIndex) {
+      var activity = viewActivities.list[listIndex],
+          taskList = activity.activityList.task;
+      taskList[taskIndex].removeConfirm = true;
+    }
+
     viewActivities.removeTask = function(listIndex, taskIndex) {
       var activity = viewActivities.list[listIndex],
           taskList = activity.activityList.task;
@@ -242,12 +312,30 @@ app.controller('viewActivities', function($scope, $http) {
       }
       removeActivity($http, activity, data, function(err, res){
          if(!err){
-          console.log(res.data)
-          viewActivities.list[listIndex] = res.data;
+          viewActivities.list[listIndex].date = res.data.date;
+          viewActivities.list[listIndex].dateVal = helper.grepDate(res.data.date);
+          viewActivities.list[listIndex].monthVal = helper.grepMonth(res.data.date);
+          viewActivities.list[listIndex].yearVal = helper.grepYear(res.data.date);
+          viewActivities.list[listIndex].activityList = res.data.activityList;
+          viewActivities.setStatusMessage("task removed successfully");
         }
       });
-
-
+    }
+    viewActivities.confirmremoveAll = function(){
+      // TODO: implement confirmremoveAll method
+    }
+    viewActivities.removeAll = function(listIndex, taskIndex) {
+      // TODO: implement removeAll method
+    }
+    viewActivities.cancelRemoveTask = function(listIndex, taskIndex){
+      var activity = viewActivities.list[listIndex],
+          taskList = activity.activityList.task;
+      taskList[taskIndex].removeConfirm = false;
+    }
+    viewActivities.confirmRemoveCommit = function(listIndex, commitIndex) {
+      var activity = viewActivities.list[listIndex],
+          commitList = activity.activityList.commit;
+      commitList[commitIndex].removeConfirm = true;
     }
     viewActivities.removeCommit = function(listIndex, commitIndex) {
       var activity = viewActivities.list[listIndex],
@@ -259,13 +347,43 @@ app.controller('viewActivities', function($scope, $http) {
       }
       removeActivity($http, activity, data, function(err, res){
         if(!err){          
-          viewActivities.list[listIndex] = res.data;
+          viewActivities.list[listIndex].date = res.data.date;
+          viewActivities.list[listIndex].dateVal = helper.grepDate(res.data.date);
+          viewActivities.list[listIndex].monthVal = helper.grepMonth(res.data.date);
+          viewActivities.list[listIndex].yearVal = helper.grepYear(res.data.date);
+          viewActivities.list[listIndex].activityList = res.data.activityList;
+          viewActivities.setStatusMessage("commit removed successfully");
         }
       });
     }
+     viewActivities.cancelRemoveCommit = function(listIndex, commitIndex){
+      var activity = viewActivities.list[listIndex],
+          commitList = activity.activityList.commit;
+      commitList[commitIndex].removeConfirm = false;
+    }
     viewActivities.update = function(listIndex) {
       var activity = viewActivities.list[listIndex];
-      updateActivity($http, activity)
-    }
+      updateActivity($http, activity, function(err, res) {
+        if(!err) {
+          viewActivities.list[listIndex].date = res.data.date;
+          viewActivities.list[listIndex].dateVal = helper.grepDate(res.data.date);
+          viewActivities.list[listIndex].monthVal = helper.grepMonth(res.data.date);
+          viewActivities.list[listIndex].yearVal = helper.grepYear(res.data.date);
+          viewActivities.list[listIndex].activityList = res.data.activityList;
+          viewActivities.setStatusMessage("Update Successful");          
+        }
+      });
+    };
+    viewActivities.configureStatusMessage = (function(scope) {
+      $scope.statusMessage = "";
+      viewActivities.setStatusMessage = function(msg) {
+        scope.statusMessage = msg;
+        setTimeout(viewActivities.clearStatusMessage, 2000);
+      }
+      viewActivities.clearStatusMessage = function(){
+        scope.statusMessage = "";
+      }
+    })($scope);
+    
    
 });
