@@ -1,202 +1,141 @@
-<!DOCTYPE html>
-<html lang="en" ng-app="activityTracker">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Activity Tracker</title>
-		<!-- css begin -->
-		<link rel="stylesheet" href="/style/base.css" />
-		<!-- css end -->
-	</head>
-	<body>
+var _             = require("underscore"),
+   schema         = require("./schema"),
+   helper         = require("./helper");
 
-		<!-- doc-wrap begin -->
-		<div class="doc-wrap">
-			<header class="page-header">
-				<h1 class="title">Activity Tracker</h1>
-			</header>
-			<section class="page-content">
-				<section class="add-data">
-					<div ng-controller="newActivity as activity">
-						<div ng-class="{'status-message':statusMessage}">{{statusMessage}}</div>
-						<input type="button" value="Add Activity" ng-click="activity.toggleDisplay()" ng-show="!activity.add"/>
-						<input type="button" value="Close" ng-click="activity.toggleDisplay()" ng-show="activity.add"/>
-						<form ng-submit="activity.save()" ng-show="activity.add">
-							<div class="group">
-								<span>Adding activity for : </span>
-								<select ng-options="date for date in activity.dateList" ng-model="activity.date">
-									<option value="">Date</option>
-								</select>
-								<select ng-options="month for month in activity.monthList" ng-model="activity.month">
-									<option value="">Month</option>
-								</select>
-								<select ng-options="year for year in activity.yearList" ng-model="activity.year">
-									<option value="">Year</option>
-								</select>
-							</div>							
-							<fieldset class="group-task">
-								<legend class="title-task" tabindex="0" title="add task"><span ng-click="activity.addTask()">[+]Task Details</span></legend>
-								<div ng-repeat="task in activity.taskList" class="row">
-									<div class="remove-container">
-										<div ng-class="{'remove-confirm': task.removeConfirm}">
-											<div ng-show="task.removeConfirm" class="options">
-												<input type="button" value="cancel" ng-click="activity.cancelRemoveTask($index)">
-												<input type="button" value="confirm remove task" ng-click="activity.removeTask($index)">
-											</div>
-											<span ng-click="activity.confirmRemoveTask($index)" tabindex="0" class="action" title="remove task">[x]</span>
-											<label class="lbl status">
-												<span class="hide-from-screen">Status</span>
-												<select ng-options="status for status in activity.statusList" ng-model="task.status">
-													<option value="">Status</option>
-												</select>
+exports.write = function(dbData, jsonData){
+	var dbActivityList     = dbData.activityList,
+		jsonActivityList   = jsonData && jsonData.activityList || {},
+		record;
+	if(!_.isEmpty(jsonActivityList)) {
+		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
+			dbData.date = jsonData.date;
+			if( typeof jsonActivityList[dbActivityName] !== "undefined" ){
+				_.each(jsonActivityList[dbActivityName], function( jsonActivity, index ){
+					record = schema.get(dbActivityName);
+					record.id = helper.guid();
+					helper.eachObject( record, function( key, value ) {
+						if(key !== "id" && typeof jsonActivity[key] !== "undefined") {
+							record[key] = jsonActivity[key];
+						}
+					});
+					dbActivity.unshift(record);	
+				})				
+			}
+		});	
+	}	
+	return dbData;
+};
 
-											</label>
-											<label class="lbl description">
-												<span class="hide-from-screen">Description</span>
-												<textarea ng-model="task.description" placeholder="add description"></textarea>
-											</label>									
-											<label class="lbl comment">
-												<span class="hide-from-screen">Comment</span>
-												<textarea ng-model="task.comment" placeholder="comment"></textarea>
-											</label>
-										</div>
-									</div>
-								</div>
-							</fieldset>
-							<fieldset class="group-commit">
-								<legend class="title-commit" tabindex="0" title="add commit"><span ng-click="activity.addCommit()">[+]Commit Details</span></legend>
-								<div ng-repeat="commit in activity.commitList" class="row">
-									<div class="remove-container">
-										<div ng-class="{'remove-confirm': commit.removeConfirm}">
-											<div ng-show="commit.removeConfirm" class="options">
-												<input type="button" value="cancel" ng-click="activity.cancelRemoveCommit($index)">
-												<input type="button" value="confirm remove commit" ng-click="activity.removeCommit($index)">
-											</div>
-											<span ng-click="activity.confirmRemoveCommit($index)" tabindex="0" class="action" title="remove commit">[x]</span>
-											<label class="lbl revision">
-												<span class="hide-from-screen">Revision Number</span>
-												<input type="text" ng-model="commit.revision" placeholder="revision number">
-											</label>
-											<label class="lbl files">
-												<span class="hide-from-screen">Files</span>
-												<textarea ng-model="commit.files" placeholder="file(s) added/updated/deleted"></textarea>
-											</label>
-											<label class="lbl comment">
-												<span class="hide-from-screen">Comment</span>
-												<textarea ng-model="commit.comment" placeholder="comment"></textarea>
-											</label>
-										</div>
-									</div>
-			
-								</div>								
-							</fieldset>
-							<input type="submit" value="Save" />
-						</form>
-					</div>
-				</section>
+exports.update = function(dbData, jsonData){
+	var dbActivityList     = dbData.activityList,
+		jsonActivityList   = jsonData && jsonData.activityList || {},
+		record;
+	if(!_.isEmpty(jsonActivityList)) {
+		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
+			if( typeof jsonActivityList[dbActivityName] !== "undefined" ){
+				_.each(jsonActivityList[dbActivityName], function( jsonActivity, index ){
+					if(!_.isObject(jsonActivity)) {
+					// handle delete request via POST since angular doesn't allow to send data with DELETE HTTP
+						var id = jsonActivity;
+						if( id === true ) {
+							dbActivityList[dbActivityName] = [];
+						}
+						else {
+							records = _.reject(dbActivityList[dbActivityName], function(activity){
+								return activity.id === id;
+							});
+							dbActivityList[dbActivityName] = records;
+						}
+					}
+					else if(jsonActivity.id) {
+						record = _.find(dbActivity, function(activity){ 
+							return activity.id === jsonActivity.id; 
+						});
+						for(var key in record) {
+							if(key !== "id") {
+								record[key] = jsonActivity[key];
+							}
+							
+						}	
+					}
+					else {
+						record = schema.get(dbActivityName);
+						record.id = helper.guid();
+						helper.eachObject( record, function( key, value ) {
+							if(key !== "id" && typeof jsonActivity[key] !== "undefined") {
+								record[key] = jsonActivity[key];
+							}
+						});
+						dbActivity.unshift(record);
+					}					
+				})				
+			}
+		});	
+	}	
+	return dbData;
+};
 
-				<section class="view-data">
-					<h1 class="title">
-						Previous Activity List
-					</h1>
-					<div ng-controller="viewActivities as activity">
-						<div ng-class="{'status-message':statusMessage}">{{statusMessage}}</div>
-						<div ng-repeat="(listIndex, list) in activity.list">
-							<section class="group">
-								<header>
-									<!-- <h2 class="sub-title">{{list.date}}</h2> -->
-									<select ng-options="date for date in activity.dateList" ng-model="list.dateVal">
-										<!-- <option value="">Date</option> -->
-									</select>
-									<select ng-options="month for month in activity.monthList" ng-model="list.monthVal">
-										<!-- <option value="">Month</option> -->
-									</select>
-									<select ng-options="year for year in activity.yearList" ng-model="list.yearVal">
-										<!-- <option value="">Year</option> -->
-									</select>
+exports.get = function(dbData, jsonData){
+	var dbActivityList     = dbData.activityList,
+		jsonActivityList   = jsonData || {},
+		type = jsonActivityList.type,
+		id = jsonActivityList.id,	
+		record;
+	if(!_.isEmpty(jsonActivityList)) {
+		if(type && id){
+			// get specific record of specific type from activity data
+			helper.eachObject( dbActivityList, function( dbActivityName, dbActivity) {
+				record = _.filter( dbActivity, function(activity) {
+					return activity.id === id;
+				});
+				dbActivityList[dbActivityName] = record || [];
+			});
+		}
+		else if(type){
+			// get specific type activities from activity data
+			helper.eachObject( dbActivityList, function( dbActivityName, dbActivity) {
+				if( type !== dbActivityName) {
+					dbActivityList[dbActivityName] = []	;
+				}				
+			})
+		}
+	}
+	else {
+		// get all data from activity data
+		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
+			dbActivityList[dbActivityName] = [];
+		});
+	}
+	return dbData;
+};
 
-								</header>
-								<article>
-									<form>
-										<fieldset class="group-task">
-											<legend class="title-task" tabindex="0" title="add task"><span ng-click="activity.addTask(listIndex, $index)">[+]Task Details</span></legend>
-											<div ng-show="!list.activityList.task.length"><em class="hint">{{activity.noTask}}</em></div>
-											<div ng-repeat="task in list.activityList.task" class="row">
-												<div class="remove-container">
-													<div ng-class="{'remove-confirm': task.removeConfirm}">
-															<div ng-show="task.removeConfirm" class="options">
-																<input type="button" value="cancel" ng-click="activity.cancelRemoveTask(listIndex, $index)">
-																<input type="button" value="confirm remove task" ng-click="activity.removeTask(listIndex, $index)">
-															</div>														
-															<span ng-click="activity.confirmRemoveTask(listIndex, $index)" class="action" title="remove task">[x]</span>
-															<label class="lbl status">
-																<span class="hide-from-screen">Status</span>
-																<select ng-options="status for status in activity.statusList" ng-model="task.status">
-																	<option value="">Status</option>
-																</select>
-															</label>
-															<label class="lbl description">
-																<span class="hide-from-screen">Description</span>
-																<textarea ng-model="task.description" placeholder="add description"></textarea>
-															</label>
-															<label class="lbl comment">
-																<span class="hide-from-screen">Comment</span>
-																<textarea ng-model="task.comment" placeholder="comment"></textarea>
-															</label>
-													</div>															
-												</div>
-												
-											</div>
-										</fieldset>
-										<fieldset class="group-commit">
-											<legend class="title-commit" tabindex="0" title="add commit"><span ng-click="activity.addCommit(listIndex, $index)">[+]Commit Details</span></legend>
-											<div ng-show="!list.activityList.commit.length"><em class="hint">{{activity.noCommit}}</em></div>
-											<div ng-repeat="commit in list.activityList.commit" class="row">
-												<div class="remove-container">
-													<div ng-class="{'remove-confirm': commit.removeConfirm}">
-														<div ng-show="commit.removeConfirm" class="options">
-															<input type="button" value="cancel" ng-click="activity.cancelRemoveCommit(listIndex, $index)">
-															<input type="button" value="confirm remove commit" ng-click="activity.removeCommit(listIndex, $index)">
-														</div>	
-														<span ng-click="activity.confirmRemoveCommit(listIndex, $index)" class="action" title="remove commit">[x]</span>
-														<label class="lbl revision">
-															<span class="hide-from-screen">Revision</span>
-															<input type="text" ng-model="commit.revision" placeholder="revision number">
-														</label>
-														<label class="lbl files">
-															<span class="hide-from-screen">Files</span>
-															<textarea ng-model="commit.files" placeholder="file(s) added/updated/deleted"></textarea>
-														</label>
-														<label class="lbl comment">
-															<span class="hide-from-screen">Comment</span>
-															<textarea ng-model="commit.comment" placeholder="comment"></textarea>
-														</label>
-													</div>
-													
-												</div>
-											</div>	
-										</fieldset>
-										<input type="submit" value="update activity" ng-submit="activity.update($index)" />
-										<input type="submit" value="delete activity" ng-submit="activity.confirmRemoveAll($index)" />
-									</form>
-								</article>
-							</section>							
-						</div>
-						<button ng-click="activity.loadMore()">Load Data for Next Month</button>
-
-
-
-					</div>
-				</section>
-			</section>	
-
-
-		</div>
-		<!-- doc-wrap end -->
-
-		<!-- script begin -->
-		<script src="/script/vendor/angular.js"></script>
-		<script src="/script/module/index.js"></script>
-		<!-- script end -->
-	</body>
-</html>
+exports.remove = function(dbData, jsonData){
+	var dbActivityList     = dbData.activityList,
+		jsonActivityList   = jsonData && jsonData.activityList || {},
+		records;
+		console.log(jsonActivityList)
+	if(!_.isEmpty(jsonActivityList)) {
+		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
+			if( typeof jsonActivityList[dbActivityName] !== "undefined" ){
+				_.each(jsonActivityList[dbActivityName], function( id, index ){
+					if( id === true ) {
+						dbActivityList[dbActivityName] = [];
+					}
+					else {
+						records = _.reject(dbActivityList[dbActivityName], function(activity){
+							return activity.id === id;
+						});
+						dbActivityList[dbActivityName] = records;
+					}
+				})				
+			}
+		});	
+	}
+	else {
+		// remove all data from activity list
+		helper.eachObject(dbActivityList, function( dbActivityName, dbActivity ){
+			dbActivityList[dbActivityName] = [];
+		});
+	}
+	return dbData;
+};
