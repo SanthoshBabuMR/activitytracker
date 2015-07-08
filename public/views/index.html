@@ -176,13 +176,13 @@
 												</div>
 											</div>	
 										</fieldset>
-										<input type="submit" value="update activity" ng-submit="activity.update($index)" />
-										<input type="submit" value="delete activity" ng-submit="activity.confirmRemoveAll($index)" />
+										<input type="submit" value="update activity" ng-click="activity.update($index)" />
+										<input type="submit" value="delete activity" ng-click="activity.confirmRemoveAll($index)" />
 									</form>
 								</article>
 							</section>							
 						</div>
-						<button ng-click="activity.loadMore()">Load Data for Next Month</button>
+						<button ng-click="activity.loadMore()">Load Data for Previous Month</button>
 
 
 

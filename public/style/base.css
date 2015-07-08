@@ -93,6 +93,9 @@ body {
 	padding: 5px;
 	display: block;
 }
+.add-data select {
+	padding: 4px;
+}
 .add-data .group{
 	padding: 5px;
 }
@@ -174,10 +177,10 @@ body {
 	color: #4468D8;
 	-webkit-appearance: none;
     -moz-appearance: none;
-    text-indent: 1px;
     text-overflow: '';
     text-transform: capitalize;
     font-weight: bold;
+    padding: 2px;
 }
 .view-data header select::-ms-expand {
     display: none;
