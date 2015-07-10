@@ -38,12 +38,12 @@
 								<legend class="title-task" tabindex="0" title="add task"><span ng-click="activity.addTask()">[+]Task Details</span></legend>
 								<div ng-repeat="task in activity.taskList" class="row">
 									<div class="remove-container">
-										<div ng-class="{'remove-confirm': task.removeConfirm}">
+										<div ng-class="{'highlight': task.removeConfirm}">
 											<div ng-show="task.removeConfirm" class="options">
 												<input type="button" value="cancel" ng-click="activity.cancelRemoveTask($index)">
 												<input type="button" value="confirm remove task" ng-click="activity.removeTask($index)">
 											</div>
-											<span ng-click="activity.confirmRemoveTask($index)" tabindex="0" class="action" title="remove task">[x]</span>
+											<span ng-show="!task.removeConfirm" ng-click="activity.confirmRemoveTask($index)" tabindex="0" class="action" title="remove task">[x]</span>
 											<label class="lbl status">
 												<span class="hide-from-screen">Status</span>
 												<select ng-options="status for status in activity.statusList" ng-model="task.status">
@@ -67,12 +67,12 @@
 								<legend class="title-commit" tabindex="0" title="add commit"><span ng-click="activity.addCommit()">[+]Commit Details</span></legend>
 								<div ng-repeat="commit in activity.commitList" class="row">
 									<div class="remove-container">
-										<div ng-class="{'remove-confirm': commit.removeConfirm}">
+										<div ng-class="{'highlight': commit.removeConfirm}">
 											<div ng-show="commit.removeConfirm" class="options">
 												<input type="button" value="cancel" ng-click="activity.cancelRemoveCommit($index)">
 												<input type="button" value="confirm remove commit" ng-click="activity.removeCommit($index)">
 											</div>
-											<span ng-click="activity.confirmRemoveCommit($index)" tabindex="0" class="action" title="remove commit">[x]</span>
+											<span ng-show="!commit.removeConfirm" ng-click="activity.confirmRemoveCommit($index)" tabindex="0" class="action" title="remove commit">[x]</span>
 											<label class="lbl revision">
 												<span class="hide-from-screen">Revision Number</span>
 												<input type="text" ng-model="commit.revision" placeholder="revision number">
@@ -90,7 +90,7 @@
 			
 								</div>								
 							</fieldset>
-							<input type="submit" value="Save" />
+							<input type="submit" value="Save Activity" ng-disabled="!(activity.taskList.length || activity.commitList.length)" />
 						</form>
 					</div>
 				</section>
@@ -102,7 +102,7 @@
 					<div ng-controller="viewActivities as activity">
 						<div ng-class="{'status-message':statusMessage}">{{statusMessage}}</div>
 						<div ng-repeat="(listIndex, list) in activity.list">
-							<section class="group">
+							<section class="group" ng-class="{'highlight':list.forDeletion}">
 								<header>
 									<!-- <h2 class="sub-title">{{list.date}}</h2> -->
 									<select ng-options="date for date in activity.dateList" ng-model="list.dateVal">
@@ -123,12 +123,12 @@
 											<div ng-show="!list.activityList.task.length"><em class="hint">{{activity.noTask}}</em></div>
 											<div ng-repeat="task in list.activityList.task" class="row">
 												<div class="remove-container">
-													<div ng-class="{'remove-confirm': task.removeConfirm}">
+													<div ng-class="{'highlight': task.removeConfirm}">
 															<div ng-show="task.removeConfirm" class="options">
-																<input type="button" value="cancel" ng-click="activity.cancelRemoveTask(listIndex, $index)">
-																<input type="button" value="confirm remove task" ng-click="activity.removeTask(listIndex, $index)">
+																<input type="button" value="Cancel" ng-click="activity.cancelRemoveTask(listIndex, $index)">
+																<input type="button" value="Confirm Remove Task" ng-click="activity.removeTask(listIndex, $index)">
 															</div>														
-															<span ng-click="activity.confirmRemoveTask(listIndex, $index)" class="action" title="remove task">[x]</span>
+															<span ng-show="!task.removeConfirm" ng-click="activity.confirmRemoveTask(listIndex, $index)" class="action" title="remove task">[x]</span>
 															<label class="lbl status">
 																<span class="hide-from-screen">Status</span>
 																<select ng-options="status for status in activity.statusList" ng-model="task.status">
@@ -153,12 +153,12 @@
 											<div ng-show="!list.activityList.commit.length"><em class="hint">{{activity.noCommit}}</em></div>
 											<div ng-repeat="commit in list.activityList.commit" class="row">
 												<div class="remove-container">
-													<div ng-class="{'remove-confirm': commit.removeConfirm}">
+													<div ng-class="{'highlight': commit.removeConfirm}">
 														<div ng-show="commit.removeConfirm" class="options">
-															<input type="button" value="cancel" ng-click="activity.cancelRemoveCommit(listIndex, $index)">
-															<input type="button" value="confirm remove commit" ng-click="activity.removeCommit(listIndex, $index)">
+															<input type="button" value="Cancel" ng-click="activity.cancelRemoveCommit(listIndex, $index)">
+															<input type="button" value="Confirm Remove Commit" ng-click="activity.removeCommit(listIndex, $index)">
 														</div>	
-														<span ng-click="activity.confirmRemoveCommit(listIndex, $index)" class="action" title="remove commit">[x]</span>
+														<span  ng-show="!commit.removeConfirm"  ng-show="!commit.removeConfirm" ng-click="activity.confirmRemoveCommit(listIndex, $index)" class="action" title="remove commit">[x]</span>
 														<label class="lbl revision">
 															<span class="hide-from-screen">Revision</span>
 															<input type="text" ng-model="commit.revision" placeholder="revision number">
@@ -176,16 +176,19 @@
 												</div>
 											</div>	
 										</fieldset>
-										<input type="submit" value="update activity" ng-click="activity.update($index)" />
-										<input type="submit" value="delete activity" ng-click="activity.confirmRemoveAll($index)" />
+										<div ng-show="!list.forDeletion" class="action-btns">
+											<input type="button" value="Update Activity" ng-click="activity.update($index)"/>
+											<input type="button" value="Delete Activity" ng-click="activity.confirmDeleteAll($index)" />
+										</div>
+										<div ng-show="list.forDeletion" class="action-btns delete-activity">
+											<input type="button" value="Cancel" ng-click="activity.cancelDeleteConfirm($index)">
+											<input type="button" value="Confirm Delete Activity" ng-click="activity.deleteConfirm($index)">
+										</div>	
 									</form>
 								</article>
 							</section>							
 						</div>
-						<button ng-click="activity.loadMore()">Load Data for Previous Month</button>
-
-
-
+						<button ng-click="activity.loadMore()" class="more" ng-disabled="activity.loadMoreInProgress">Load Data for Previous Month</button>
 					</div>
 				</section>
 			</section>	

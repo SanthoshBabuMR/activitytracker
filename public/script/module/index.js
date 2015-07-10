@@ -151,7 +151,7 @@ function removeActivity($http, activity, data, callback) {
 
 
 
-app.controller('newActivity', function($scope, $http) {
+app.controller('newActivity', function($scope, $http, $timeout) {
     var newActivity = this;
     newActivity.taskList = [];
     newActivity.commitList = [];
@@ -216,21 +216,21 @@ app.controller('newActivity', function($scope, $http) {
         }        
       });
     }
-    newActivity.configureStatusMessage = (function(scope) {
+    newActivity.configureStatusMessage = (function(scope,timeout) {
       scope.statusMessage = "";
       newActivity.setStatusMessage = function(msg) {
         scope.statusMessage = msg;
-        setTimeout(newActivity.clearStatusMessage, 2000);
+        timeout(newActivity.clearStatusMessage, 2000);
       }
       newActivity.clearStatusMessage = function(){
         scope.statusMessage = "";
       }
-    })($scope);
+    })($scope,$timeout);
     
 });
 
 
-app.controller('viewActivities', function($scope, $http) {
+app.controller('viewActivities', function($scope, $http, $timeout) {
     var viewActivities = this;
     var today = new Date();
     var currentDate = today.getDate();
@@ -238,6 +238,7 @@ app.controller('viewActivities', function($scope, $http) {
     var currentMonth =  helper.getMonthByIndex(currentMonthIndex);
     var currentYear = today.getFullYear();
     var nextMonth;
+    var timer;
     viewActivities.dateList = static.dateList();    
     viewActivities.monthList = static.monthList();
     viewActivities.yearList = static.yearList();
@@ -246,8 +247,9 @@ app.controller('viewActivities', function($scope, $http) {
     viewActivities.noCommit = 'No commit(s) added for the day.'
     viewActivities.hasTask = true;
     viewActivities.hasCommit = true;
+    viewActivities.loadMoreInProgress = false;
  
-    viewActivities.getDataByMonth = function(m,y) {
+    viewActivities.getDataByMonth = function(m,y, callback) {
       var from     = helper.getDaysInAMonth(m,y)+m+y,
           to       = "01"+m+y,
           routeURL = "http://localhost:6060/list/";
@@ -268,7 +270,10 @@ app.controller('viewActivities', function($scope, $http) {
         }
         else {
           console.log("error in getting activity list ");  
-        }        
+        }
+        if(typeof callback === "function"){
+          callback(err, res);
+        }
       });   
       
     }
@@ -276,6 +281,7 @@ app.controller('viewActivities', function($scope, $http) {
     viewActivities.list = [];
     viewActivities.getDataByMonth(currentMonth, currentYear);
     viewActivities.loadMore = function() {
+      viewActivities.loadMoreInProgress = true;
       var currentMonthIndex = helper.getMonthIndex(currentMonth);
       if(currentMonthIndex === 0 ) {
         currentYear--;
@@ -285,26 +291,42 @@ app.controller('viewActivities', function($scope, $http) {
         currentMonthIndex--;
       }
       currentMonth =  helper.getMonthByIndex(currentMonthIndex);
-      viewActivities.getDataByMonth(currentMonth, currentYear);
+      viewActivities.loadMore.statusMessage = "loading data for " + currentMonth + " " + currentYear;
+      viewActivities.setStatusMessage("loading data for " + currentMonth + " " + currentYear);
+      viewActivities.getDataByMonth(currentMonth, currentYear, function(err, res){
+        viewActivities.loadMoreInProgress = false;
+        if(!err && res.data && !res.data.length) {
+          viewActivities.setStatusMessage("no activity added for " + currentMonth + " " + currentYear);
+        }
+        else {
+         viewActivities.setStatusMessage("loaded activities for " + currentMonth + " " + currentYear); 
+        }        
+      });
     }
 
+
     viewActivities.addTask = function(listIndex, taskIndex) {
-      var taskList = viewActivities.list[listIndex].activityList.task;
+      var activity = viewActivities.list[listIndex];
+      var taskList = activity.activityList.task;
       taskList.unshift( core.getTaskModel() );
+      activity.forDeletion = false;
     }
     viewActivities.addCommit = function(listIndex, commitIndex) {
-      var commitList = viewActivities.list[listIndex].activityList.commit;
+      var activity = viewActivities.list[listIndex];
+      var commitList = activity.activityList.commit;
       commitList.unshift( core.getCommitModel() );
+      activity.forDeletion = false;
     }
     viewActivities.confirmRemoveTask = function(listIndex, taskIndex) {
       var activity = viewActivities.list[listIndex],
           taskList = activity.activityList.task;
       taskList[taskIndex].removeConfirm = true;
+      activity.forDeletion = false;
     }
 
     viewActivities.removeTask = function(listIndex, taskIndex) {
       var activity = viewActivities.list[listIndex],
-          taskList = activity.activityList.task;
+          taskList = activity.activityList.task;      
       var data = {
         activityList: {
           task: [ taskList[taskIndex].id ]
@@ -321,11 +343,30 @@ app.controller('viewActivities', function($scope, $http) {
         }
       });
     }
-    viewActivities.confirmremoveAll = function(){
-      // TODO: implement confirmremoveAll method
+    viewActivities.confirmDeleteAll = function(listIndex){
+      var activity = viewActivities.list[listIndex];
+      activity.forDeletion = true;
     }
-    viewActivities.removeAll = function(listIndex, taskIndex) {
-      // TODO: implement removeAll method
+    viewActivities.deleteConfirm = function(listIndex) {
+        var activity = viewActivities.list[listIndex],
+            routeURL = "http://localhost:6060/";
+        routeURL += activity.date.replace(/-/g,"");
+        $http.delete(routeURL)
+          .success(function(res, status, headers, config) {
+            //callback(null, res);
+            if(res.data === null){
+              viewActivities.list.splice(listIndex,1);
+            }
+            else {
+              viewActivities.list[listIndex] = res.data;
+            }
+          }).error(function(res, status, headers, config) {
+            //callback(res);
+          });
+    }
+    viewActivities.cancelDeleteConfirm = function(listIndex){
+      var activity = viewActivities.list[listIndex];
+      activity.forDeletion = false;
     }
     viewActivities.cancelRemoveTask = function(listIndex, taskIndex){
       var activity = viewActivities.list[listIndex],
@@ -336,6 +377,7 @@ app.controller('viewActivities', function($scope, $http) {
       var activity = viewActivities.list[listIndex],
           commitList = activity.activityList.commit;
       commitList[commitIndex].removeConfirm = true;
+      activity.forDeletion = false;
     }
     viewActivities.removeCommit = function(listIndex, commitIndex) {
       var activity = viewActivities.list[listIndex],
@@ -374,16 +416,17 @@ app.controller('viewActivities', function($scope, $http) {
         }
       });
     };
-    viewActivities.configureStatusMessage = (function(scope) {
+    viewActivities.configureStatusMessage = (function(scope, timeout) {
       $scope.statusMessage = "";
+      timeout.cancel(timer);
       viewActivities.setStatusMessage = function(msg) {
         scope.statusMessage = msg;
-        setTimeout(viewActivities.clearStatusMessage, 2000);
+        timer = timeout(viewActivities.clearStatusMessage, 2000);
       }
       viewActivities.clearStatusMessage = function(){
         scope.statusMessage = "";
       }
-    })($scope);
+    })($scope, $timeout);
     
    
 });

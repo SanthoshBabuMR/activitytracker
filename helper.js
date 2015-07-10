@@ -117,6 +117,7 @@ exports.guid = function() {
 };
 
 exports.sendError = function(res, err){
+	console.log("helper.sendError:");
 	console.log(err);
 	res.send({
 		error: err
@@ -124,8 +125,11 @@ exports.sendError = function(res, err){
 };
 
 exports.sendData = function(res, data){
+	console.log("helper.sendData:");
+	console.log(data)
 	res.send({
 		error: null,
 		data: data
 	});
 };
+

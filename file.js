@@ -127,32 +127,43 @@ exports.removeRecord = function( fpath, req, callback ){
 			console.log(err);
 			callback(err);
 		}
-		fs.readFile(fpath, function(err,fcontents){
-			if(err) {
-				console.log("ERROR-> file.js > exports.updateRecord > readFile");
-				console.log(err);
-				callback(err);
-			}
-
-			dbData = (fcontents.toString().length)? JSON.parse( fcontents.toString() ) : schema.skeleton();
-			jsonData = helper.formatJSONData(req.body);
-			/*jsonData = { 
-				"activityList": { 
-					"commit": [true],
-					"task": ["8f4582e1-2633-c2d1-d2d7-bac878911a05"]
-				} 
-			};
-			*/
-			jsonData={};
-			record.remove( dbData, jsonData );
-			fs.writeJSON(fpath, dbData, function(err){
+		jsonData = helper.formatJSONData(req.body);
+		if(!jsonData.date) {
+			fs.remove(fpath, function (err) {
+				if(err){
+					console.log("ERROR-> record.js > exports.remove");
+					return callback(err);
+				}
+				return callback(null, null);
+			})
+		}
+		else {
+			fs.readFile(fpath, function(err,fcontents){
 				if(err) {
-					console.log("ERROR-> exports.updateRecord > writeJSON");
+					console.log("ERROR-> file.js > exports.updateRecord > readFile");
 					console.log(err);
 					callback(err);
 				}
-				callback(null, dbData);
+				dbData = (fcontents.toString().length)? JSON.parse( fcontents.toString() ) : schema.skeleton();
+				/*jsonData = { 
+					"activityList": { 
+						"commit": [true],
+						"task": ["8f4582e1-2633-c2d1-d2d7-bac878911a05"]
+					} 
+				};
+				*/
+				jsonData={};
+				record.remove( dbData, jsonData, fpath );
+				fs.writeJSON(fpath, dbData, function(err){
+					if(err) {
+						console.log("ERROR-> exports.updateRecord > writeJSON");
+						console.log(err);
+						callback(err);
+					}
+					callback(null, dbData);
+				});
 			});
-		});
+		}
+		
 	});
 };
